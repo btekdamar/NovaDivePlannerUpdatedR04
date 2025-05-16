@@ -1,0 +1,190 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+---
+description: Applies Dive Planner Android development best practices for technical and recreational dive planning implementation with Buhlmann ZHL-16c algorithm.
+globs: com/yourcompany/novadiveplannerupdated/**/*.java
+---
+
+# NovaDivePlannerUpdated Android Development Rules
+
+This document defines the best practices and requirements for implementing technical and recreational dive planning features using the Buhlmann ZHL-16c algorithm for the NovaDivePlannerUpdated Android application.
+
+## General Principles
+
+-   **Architecture:** Strictly adhere to Clean Architecture principles (Domain, Data, Presentation layers).
+-   **Language:** The application must be written in Java.
+-   **UI Pattern:** Implement the MVVM (Model-View-ViewModel) pattern with ViewModels and UI State management.
+-   **Asynchronous Programming:** Use RxJava properly with appropriate error handling and subscription management. Avoid deeply nested RxJava chains; use composition or extract methods instead.
+-   **Dependency Injection (DI):** Use Hilt for dependency injection with appropriate scoping. Prefer constructor injection for better testability.
+-   **Data Persistence:** Maintain offline planning capabilities with proper data persistence (e.g., Room persistence) for dive plans, gases, and user settings.
+-   **Model Class Construction:** Generally use the Builder pattern for creating instances of model classes (Entities, DTOs, UI States), especially for objects with multiple optional parameters or complex construction logic, to improve readability and maintainability.
+
+## Layer Rules and Dependency Flow
+
+The dependency flow must strictly follow Clean Architecture rules: `presentation -> domain <- data`.
+
+1.  **Presentation Layer (Outermost):**
+    *   Should reside in the `com.yourcompany.novadiveplannerupdated.presentation` package.
+    *   Must contain ViewModels, Fragments, Activities, UI States, and all UI-related components (Settings, Gases, Plan, Graph, Segment screens, and dialogs).
+    *   Can depend on the Domain layer.
+    *   **Cannot depend on the Data layer.**
+    *   UI updates must happen strictly on the main thread (`AndroidSchedulers.mainThread()`).
+2.  **Domain Layer (Innermost):**
+    *   Should reside in the `com.yourcompany.novadiveplannerupdated.domain` package.
+    *   Must contain pure business logic. Caata layers.
+    *   Must contain Use Cases, Entities, aerfaces.
+    *   **All dive calculation algorithms (Buhlmann ZHL-16CR, etc.) and tissue compartment models must reside in this layer.**
+ ces for outer layer dependencies like Repositories to maintain theDependency Inversion.
+3.  **Data Layer:**
+    *   in the `com.yourcompany.novadiveplannerukage.
+    *   Must contain Repository implementation/Local), DAOs, DTOs, and database an depend on the Domain layer (imy interfaces).
+    *   **Cannot depend on thr.**
+    *   Data access must * Repository pattern. Direct access to DAOs or bidden (`new .*Dao()` or `new .*ApiService()` is d Dive Algorithm Implementation Requirementsrequirements are based on the `PelagicTrimixDiveComputerAlgorithms12-8902dec2012[97].md`, `039_END_WOB_HT_Formulas v1.7.md`, and `CCR Algorithm.md` documents.
+
+1.  **Buhlmann ZHL-16c Algorithm:**
+    *   **17 Tissue Compartments:** Must be implemented correctly with the specified half-times (\(\tau_{1/2}\)), a and b coefficients (`Fixed Parameter Values` table). Use defined constants (e.g., in a `DiveConstants` class) for algorithm parameters and coefficients, avoid magic numbers (`new TissueCompartment(number, number)` usage is disallowed).
+    *   **Tissue Tensions (\(\pi\)):** Nitrogen (\(\pi_{iN2}\)) and Helium (\(\pi_{iHe}\)) tensions must be updated every second at depth and every minute on the surface (formulas in `Tension Calculations` section).
+    *   **a and b Values:** Instantaneous a and b values for mixed gases must be calculated using a weighted average based on current N2 and He tensions (formulas in `Tension Calculations` section).
+    *   **M-Values and Gradient Factors (GF):** Allowable maximum tissue tensions (M-Values) must be calculated based on the selected Gradient Factors (GF High/Low) and depth (`GF(D)`). Calculations must follow formulas in `Decompression Stops and Times` and `Gradient Factor` sections.
+    *   **Ascent/Descent Effects:** The effects of ascent and descent rates on tissue loading must be calculated correctly (formulas in `Tension Calculations`, `Decompression Stops and Times`, and `Pre-Dive Planning equations` sections).
+    *   **Altitude:** Calculations for diving at altitude (`Altitude` section) must be adapted using the initial ambient pressure (`P_{init}`). Replace 33 fsw with `P_{init}` and 23 fsw with `P_{init} - 10` in all relevant equations.
+2.  **Segment Management (`SegmentScreen.png`, `AddEditSegmentDialog.png`):**
+    *   Each dive must support multiple segments.
+    *   Depth transitions between segments (ascent/descent rates) must be managed correctly. Ascent/descent time is included in the segment duration.
+    *   Time spent at depth must be accurately tracked for each segment.
+    *   Adding/editing segments must recalculate tissue loading from the dive start.
+    *   Segment addition should only be allowed at the end of the dive plan. The last segment should be editable.
+    *   If the next segment uses a different gas, the gas switch must occur *after* reaching the depth of the next segment.
+    *   For manual gas switches during descent, add a zero-time segment at the switch depth with the new gas.
+3.  **Multi-Dive Handling (`AddDiveDialog.png`):**
+    *   Tissue off-gassing during surface intervals must be calculated correctly (`Repetitive Diving` and `Desaturation` sections). Different half-times for N2 and He on the surface might be used (`Repetitive Diving` section).
+    *   A new dive must start with tissue values from the end of the previous dive + surface interval.
+    *   Adding a new dive must preserve the final tissue state of the previous dive.
+    *   Surface interval input must be supported (`AddDiveDialog.png`).
+    *   Navigation between multiple dives via header tabs should be supported.
+4.  **Gas Management (`GasScreen.png`, `EditGasDialog.png`):**
+    *   Support up to 10 different gas definitions (Air, Nitrox, Trimix, Heliox).
+    *   Gases should be configurable as OC (Open Circuit), CC (Closed Circuit - Diluent).
+    *   Implement proper gas switches between segments.
+    *   Automatic gas switching should only occur after deco entry to a suitable gas (OC or CC) with higher FO2. The PO2 of the switched gas must not exceed the PO2 Max set for that gas.
+    *   **Calculations:**
+        *   END (Equivalent Narcotic Depth) - with O2 narcotic option (`039_END_WOB_HT_Formulas v1.7.md`).
+        *   WOB (Work of Breathing) (`039_END_WOB_HT_Formulas v1.7.md`).
+        *   HT (Hypoxic Threshold) (`039_END_WOB_HT_Formulas v1.7.md`).
+        *   MOD (Maximum Operating Depth) - based on PO2 Max.
+    *   Gas label printing should be supported (`GasPrintLabelScreen.png`).
+    *   Gas parameters should be editable (`EditGasDialog.png`).
+    *   Tank capacity and reserve percentage (%RSRV) input and gas consumption tracking must be implemented (`Gas Time Remaining` section).
+5.  **Decompression Calculations:**
+    *   NDL (No Decompression Limit) must be calculated correctly (`No Decompression Times` section). Should be found iteratively.
+    *   Required decompression stops (at 10ft/3m intervals, rounded to the nearest 10ft/3m) and times must be calculated correctly (`Decompression Stops and Times` section). Time for each stop should be found iteratively.
+    *   The last deco stop depth (10ft/3m or 20ft/6m) should be configurable.
+    *   Gradient Factor (GF High/Low) adjustments must be supported (`SettingsScreen.png`).
+    *   Altitude adjustments must be applied correctly (`Altitude` section).
+    *   Gas consumption during decompression must be calculated.
+    *   Total Run Time (TRT) and Time To Surface (TTS) must be calculated.
+    *   Planning should be prevented if any deco stop exceeds 200 minutes.
+6.  **Closed Circuit Rebreather (CCR) Calculations (`CCR Algorithm.md`, `Pelagic...md CCR Equations`):**
+    *   Set Point (SP) management: Two SPs (High/Low) should be configurable.
+    *   Automatic SP switch depths (Low->High, High->Low) should be configurable and applied.
+    *   Inert gas (N2, He) partial pressures at constant PPO2 must be calculated based on depth and diluent composition.
+    *   Tissue tension calculations for CCR must correctly account for changing inert gas partial pressures (`CCR Algorithm.md` Section II.b).
+    *   Handle the case of breathing pure O2 in shallow depths (PPO2 < SP) (`CCR Algorithm.md` Section II.a).
+7.  **Oxygen Toxicity (`Oxygen Toxicity` section):**
+    *   Track Pulmonary (OTU - Oxygen Toxicity Unit) and Central Nervous System (CNS%) oxygen toxicity.
+    *   Calculate and monitor daily (OTUD) and single dive (OTUS) limits according to NOAA standards.
+    *   Calculate OTUS decay during surface interval (90 min half-time). OTUD does not decay.
+    *   Calculate Oxygen Time Remaining (OTR).
+8.  **Validation and Safety:**
+    *   All calculation methods (`calculateDive`, `calculateDecompression`, `calculateTissueLoading`, `addSegment`, `addNewDive`, etc.) must validate input parameters for safety (negative depth/time, unreasonable values, etc.).
+    *   Gas switches must be checked for Isobaric Counter Diffusion (ICD) (\(\Delta N2 < \Delta He / 5\), `Isobaric Counter Diffusion` section). Warn if necessary.
+    *   Check MOD (Maximum Operating Depth) and HT (Hypoxic Threshold) for gases and warn if exceeded.
+    *   Prevent dangerous decompression profiles (e.g., excessively long stops).
+    *   Ascent and descent rates should be within reasonable limits (configurable?).
+    *   Check for sufficient gas volume for the planned dive (based on tank capacity and RMV). Display GTR (Gas Time Remaining).
+    *   Validate SET point ranges for CC diving (e.g., 0.4-1.6 atm).
+    *   Calculation operations must not block the main thread. Avoid blocking RxJava operators like `blockingGet()`, `blockingSingle()`, `blockingFirst()`.
+
+## UI Implementation Requirements
+
+The following requirements are based on `0361_DivePlanner_Guide_rev2 TO3.md` and screenshots (`documents/screens/`).
+
+1.  **General:**
+    *   Support Metric and Imperial unit systems (`SettingsScreen.png`).
+    *   Settings and gas definitions must persist between application sessions.
+    *   Gas definitions should be editable and reusable.
+    *   A bottom navigation menu working across all screens should be present.
+    *   Implement single (`SinglePicker.png`) and double (`DoublePicker.png`) picker controls for numeric inputs.
+2.  **Screens:**
+    *   **Settings Screen (`SettingsScreen.png`):** Allow configuration of gradient factors, unit system, altitude level, last deco stop, CC settings (SP, AutoSwitch), END/WOB alarms, RMV (Dive/Deco), etc.
+    *   **Gases Screen (`GasScreen.png`):** Allow definition and management of breathing gases (max 6) (OC/CC/OFF, FO2, FHe, PO2 Max, Capacity, %RSRV). Display calculated limits (MOD, HT, END Limit, WOB Limit).
+    *   **Plan Screen (`PlanSummaryScreen.png`, `PlanDetailedScreen.png`):** Show the dive plan with summary and detailed views, allowing toggling between them. Display info: Max Depth, Ceiling, TTS, Current PO2, O2 Saturation (%), Current GF (%), END, EAD, WOB, Total Gas Consumption, GTR.
+    *   **Graph Screen (`GraphScreen.png`):** Display a visual representation of the dive profile with gas colors and warning icons. An interactive time slider could show instantaneous depth and other info.
+    *   **Segments Screen (`SegmentScreen.png`):** Display the list of dive segments, allowing Add/Edit/Delete operations.
+3.  **Dialogs and Other Screens:**
+    *   **Add Dive Dialog (`AddDiveDialog.png`):** Allow adding new dives with surface interval input.
+    *   **Add/Edit Segment Dialog (`AddEditSegmentDialog.png`):** Allow adding/editing segments with parameters like depth, duration, gas, ascent/descent rate, SP (for CC), and perform input validation. May show advanced info (PO2 range, max END/WOB, O2 Sat, Ceiling, Gas Consumption).
+    *   **Gas Print Label Screen (`GasPrintLabelScreen.png`):** Support printing gas labels with accurate information.
+    *   **Menu Dialog (`OpenMenuDialog.png`):** Provide options for sharing, printing, help, etc.
+
+## RxJava Rules
+
+-   **Chain Complexity:** Avoid deeply nested RxJava chains (`.flatMap(..flatMap(..flatMap(`) to maintain readability. Use composition or extract methods instead.
+-   **Subscription Management:** RxJava subscriptions must be properly disposed. Add subscriptions to `CompositeDisposable` and dispose them in `onCleared()` (ViewModel) or `onDestroy()` (Activity/Fragment) (usage of `.subscribe((?!.*CompositeDisposable)` is disallowed).
+-   **Thread Management:** UI updates must **always** happen on the main thread (usage of `.observeOn((?!AndroidSchedulers.mainThread()))` is disallowed, use `AndroidSchedulers.mainThread()`).
+-   **Blocking:** Potentially long-running operations like calculations should not block the main thread. Avoid blocking RxJava operators like `.blockingGet()`, `.blockingSingle()`, `.blockingFirst()`; use asynchronous approaches.
+
+## PowerShell Command Line Requirements
+
+-   All command-line operations must be performed using Windows PowerShell.
+-   Project building, folder creation/modification/deletion, project cleaning, and running tests must all be executed through PowerShell commands in the terminal, one by one.
+-   The output of PowerShell commands must be recorded and analyzed in case of errors.
+-   When running commands, ensure that each operation is fully completed before proceeding to the next one.
+-   Gradle commands should be executed through PowerShell in the following format: `.\\gradlew [task]`
+-   All build and test commands must be completed and checked within the ROADMAP items.
+-   Implement proper error handling for each PowerShell command execution.
+-   All commands should be appropriately logged with timestamps for debugging purposes.
+-   Always verify command execution success before continuing with related tasks.
+
+## Reference Materials & Visual Guide
+
+### Algorithm References
+
+-   [PelagicTrimixDiveComputerAlgorithms12-8902dec2012[97].md](mdc:documents/algorithms/PelagicTrimixDiveComputerAlgorithms12-8902dec2012[97].md): Contains implementation of the Buhlmann ZHL-16c algorithm.
+-   [039_END_WOB_HT_Formulas v1.7.md](mdc:documents/algorithms/039_END_WOB_HT_Formulas v1.7.md): Contains formulas for END, WOB and HT calculations.
+-   [CCR Algorithm.md](mdc:documents/algorithms/CCR Algorithm.md): Contains algorithms for closed circuit rebreather calculations.
+-   [0361_DivePlanner_Guide_rev2 TO3.md](mdc:documents/algorithms/0361_DivePlanner_Guide_rev2 TO3.md): Contains general guide for dive planning.
+
+### Screen References
+
+-   @AddDiveDialog.png: Dialog for adding new dives with surface interval.
+-   @AddEditSegmentDialog.png: Dialog for adding/editing segments.
+-   @GasScreen.png: Screen for gas management.
+-   @GraphScreen.png: Screen for dive profile visualization.
+-   @PlanDetailedScreen.png: Detailed plan view.
+-   @PlanSummaryScreen.png: Summary plan view.
+-   @SegmentScreen.png: Screen for segment management.
+-   @SettingsScreen.png: Settings screen.
+-   @GasPrintLabelScreen.png: Screen for printing gas labels.
+-   @OpenMenuDialog.png: Dialog for sharing, printing, etc.
+-   @SinglePicker.png: Single value picker control.
+-   @DoublePicker.png: Double value picker control.
+-   @EditGasDialog.png: Edit gas dialog.
+
+### Reference Codes
+
+-   VB.NET codes under `documents/refcodes/` (e.g., `DivePlan.vb`, `BuhlmannModel.vb`, `Gas.vb`) can be reviewed for algorithm implementation reference.
+
+
+
+
+

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="@string/title_settings" />
+
+    <item
+        android:id="@+id/navigation_gases"
+        android:icon="@drawable/ic_gases"
+        android:title="@string/title_gases" />
+
+    <item
+        android:id="@+id/navigation_plan"
+        android:icon="@drawable/ic_plan"
+        android:title="@string/title_plan" />
+
+    <item
+        android:id="@+id/navigation_graph"
+        android:icon="@drawable/ic_graph"
+        android:title="@string/title_graph" />
+
+    <item
+        android:id="@+id/navigation_segments"
+        android:icon="@drawable/ic_segment"
+        android:title="@string/title_segments" />
+
+</menu> 

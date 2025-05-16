@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/navigation_plan">
+
+    <fragment
+        android:id="@id/navigation_settings"
+        android:name="com.burc.novadiveplannerupdated.presentation.ui.settings.SettingsFragment"
+        android:label="@string/title_settings"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@id/navigation_gases"
+        android:name="com.burc.novadiveplannerupdated.presentation.ui.gases.GasesFragment"
+        android:label="@string/title_gases"
+        tools:layout="@layout/fragment_gases" >
+        <action
+            android:id="@+id/action_navigation_gases_to_editGasDialogFragment"
+            app:destination="@id/editGasDialogFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@id/navigation_plan"
+        android:name="com.burc.novadiveplannerupdated.presentation.ui.plan.PlanFragment"
+        android:label="@string/title_plan"
+        tools:layout="@layout/fragment_plan" />
+
+    <fragment
+        android:id="@id/navigation_graph"
+        android:name="com.burc.novadiveplannerupdated.presentation.ui.graph.GraphFragment"
+        android:label="@string/title_graph"
+        tools:layout="@layout/fragment_graph" />
+
+    <fragment
+        android:id="@id/navigation_segments"
+        android:name="com.burc.novadiveplannerupdated.presentation.ui.segments.SegmentsFragment"
+        android:label="@string/title_segments"
+        tools:layout="@layout/fragment_segments" />
+
+    <dialog
+        android:id="@+id/editGasDialogFragment"
+        android:name="com.burc.novadiveplannerupdated.presentation.ui.gases.edit.EditGasDialogFragment"
+        android:label="Edit Gas"
+        tools:layout="@layout/dialog_edit_gas" >
+        <argument
+            android:name="slotNumber" 
+            app:argType="integer" />
+    </dialog>
+
+</navigation> 

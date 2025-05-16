@@ -1,0 +1,54 @@
+<resources>
+    <string name="app_name">NovaDivePlannerUpdated</string>
+    <!-- Bottom Nav Titles -->
+    <string name="title_settings">Settings</string>
+    <string name="title_gases">Gases</string>
+    <string name="title_plan">Plan</string>
+    <string name="title_graph">Graph</string>
+    <string name="title_segments">Segments</string>
+    <!-- Placeholder Fragment Titles -->
+    <string name="settings_fragment_label">Settings Fragment</string>
+    <string name="gases_fragment_label">Gases Fragment</string>
+    <string name="plan_fragment_label">Plan Fragment</string>
+    <string name="graph_fragment_label">Graph Fragment</string>
+    <string name="segments_fragment_label">Segments Fragment</string>
+    <!-- Button Titles -->
+    <string name="button_cancel">Cancel</string>
+    <string name="button_set">Set</string>
+    <string name="button_save">Save</string>"
+    <!-- Dialog Descriptions -->
+    <string name="increase_value">Increase Value</string>"
+    <string name="decrease_value">Decrease Value</string>"
+    <!-- Settings Titles -->
+    <string name="settings_units_label">Units</string>
+    <string name="settings_altitude_label">Altitude</string>
+    <string name="settings_last_stop_label">Last Stop Depth</string>
+    <string name="settings_gf_high_label">GF High</string>
+    <string name="settings_gf_low_label">GF Low</string>
+    <!-- <string name="settings_ead_threshold_label">EAD Alarm Threshold</string> -->
+    <string name="settings_end_alarm_label">END Alarm</string>
+    <string name="settings_wob_alarm_label">WOB Alarm</string>
+    <string name="settings_end_alarm_threshold_label">END Alarm Threshold</string>
+    <string name="settings_wob_alarm_threshold_label">WOB Alarm Threshold</string>
+    <string name="settings_oxygen_narcotic_label">Oxygen/Narcotic</string>"
+    <string name="settings_sac_dive_label">SAC Dive</string>
+    <string name="settings_sac_deco_label">SAC Deco</string>
+    <!-- Gas Titles -->
+    <string name="gas_edit_dialog_title">Edit Gas %d</string>
+    <string name="gas_mode_label">Mode</string>
+    <string name="gas_fo2_label">FO2</string>
+    <string name="gas_fhe_label">FHe</string>
+    <string name="gas_po2_max_label">PO2 Max</string>
+    <string name="gas_ead_label">EAD</string>
+    <string name="gas_eadd_label">EADD</string>
+    <string name="gas_mod_label">MOD</string>
+    <string name="gas_low_po2_label">Low PO2</string>
+    <string name="gas_edit_content_description">Edit Gas</string>"
+    <!-- Titles for Edit Gas Pickers -->
+    <string name="edit_gas_dialog_set_fo2_title">Set FO2 (%)</string>
+    <string name="edit_gas_dialog_set_fhe_title">Set FHe (%)</string>
+    <!-- Unit -->
+    <string name="unit_atm">atm</string>
+    <string name="unit_m_short"> m</string>
+    <string name="unit_ft_short"> ft</string>
+</resources>

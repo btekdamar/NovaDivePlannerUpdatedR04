@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="8dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="8dp"
+    android:paddingBottom="4dp">
+
+    <!-- Row 1: Labels -->
+    <TextView
+        android:id="@+id/textViewGasSlotAndTypeLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_label_mod"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="GAS 1 (OC)" />
+
+    <TextView
+        android:id="@+id/textViewModLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="MOD"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_label_ht"
+        app:layout_constraintStart_toEndOf="@+id/guideline_label_mod"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewHtLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="Low PO2"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_label_end"
+        app:layout_constraintStart_toEndOf="@+id/guideline_label_ht"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewEndLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="END"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_label_wob"
+        app:layout_constraintStart_toEndOf="@+id/guideline_label_end"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewWobLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text="WOB"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_edit_icon"
+        app:layout_constraintStart_toEndOf="@+id/guideline_label_wob"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Row 2: Values -->
+    <CheckBox
+        android:id="@+id/checkBoxGasEnabled"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewGasSlotAndTypeLabel"
+        tools:checked="true" />
+
+    <TextView
+        android:id="@+id/textViewGasName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        app:layout_constraintBottom_toBottomOf="@+id/checkBoxGasEnabled"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_label_mod"
+        app:layout_constraintStart_toEndOf="@+id/checkBoxGasEnabled"
+        app:layout_constraintTop_toTopOf="@+id/checkBoxGasEnabled"
+        tools:text="TX 18/30" />
+
+    <TextView
+        android:id="@+id/textViewModValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        app:layout_constraintBottom_toBottomOf="@+id/checkBoxGasEnabled"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_label_ht"
+        app:layout_constraintStart_toEndOf="@+id/guideline_label_mod"
+        app:layout_constraintTop_toTopOf="@+id/checkBoxGasEnabled"
+        tools:text="261 ft" />
+
+    <TextView
+        android:id="@+id/textViewHtValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        app:layout_constraintBottom_toBottomOf="@+id/checkBoxGasEnabled"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_label_end"
+        app:layout_constraintStart_toEndOf="@+id/guideline_label_ht"
+        app:layout_constraintTop_toTopOf="@+id/checkBoxGasEnabled"
+        tools:text="5 ft" />
+
+    <TextView
+        android:id="@+id/textViewEndValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        app:layout_constraintBottom_toBottomOf="@+id/checkBoxGasEnabled"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_label_wob"
+        app:layout_constraintStart_toEndOf="@+id/guideline_label_end"
+        app:layout_constraintTop_toTopOf="@+id/checkBoxGasEnabled"
+        tools:text="170 ft" />
+
+    <TextView
+        android:id="@+id/textViewWobValue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        app:layout_constraintBottom_toBottomOf="@+id/checkBoxGasEnabled"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_edit_icon"
+        app:layout_constraintStart_toEndOf="@+id/guideline_label_wob"
+        app:layout_constraintTop_toTopOf="@+id/checkBoxGasEnabled"
+        tools:text="146 ft" />
+
+    <ImageView
+        android:id="@+id/imageViewEditGas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Edit Gas"
+        android:src="@drawable/ic_edit"
+        app:layout_constraintBottom_toBottomOf="@+id/checkBoxGasEnabled"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/guideline_edit_icon"
+        app:layout_constraintTop_toTopOf="@+id/checkBoxGasEnabled" />
+
+    <!-- Guidelines for column alignment -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_label_mod"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.28" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_label_ht"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.47" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_label_end"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.63" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_label_wob"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.78" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_edit_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.9" />
+
+</androidx.constraintlayout.widget.ConstraintLayout> 
