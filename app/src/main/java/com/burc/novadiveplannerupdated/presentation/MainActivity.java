@@ -1,12 +1,14 @@
 package com.burc.novadiveplannerupdated.presentation;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -24,13 +26,17 @@ import dagger.hilt.android.AndroidEntryPoint;
 @AndroidEntryPoint
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
     private AppBarConfiguration appBarConfiguration;
+    private MainViewModel mainViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // EdgeToEdge.enable(this); // Removed this as we manually handle insets
         setContentView(R.layout.activity_main);
+
+        mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -48,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
                 .findFragmentById(R.id.nav_host_fragment);
         if (navHostFragment == null) {
             // Handle error: NavHostFragment not found
+            Log.e(TAG, "NavHostFragment not found!");
             return;
         }
         NavController navController = navHostFragment.getNavController();
@@ -70,8 +77,42 @@ public class MainActivity extends AppCompatActivity {
         // Setup BottomNavigationView with NavController
         NavigationUI.setupWithNavController(bottomNavView, navController);
 
+        // Observe LiveData from MainViewModel
+        observeViewModel();
+
         // TODO: Add logic for hamburger menu icon click listener
         // TODO: Add logic to manage dive tabs in the toolbar
+    }
+
+    private void observeViewModel() {
+        mainViewModel.isLoading.observe(this, isLoading -> {
+            if (isLoading) {
+                Log.d(TAG, "Loading initial DivePlan...");
+                // Optionally, show a global loading indicator
+            } else {
+                Log.d(TAG, "Finished loading initial DivePlan process.");
+                // Optionally, hide a global loading indicator
+            }
+        });
+
+        mainViewModel.activeDivePlan.observe(this, divePlan -> {
+            if (divePlan != null) {
+                Log.i(TAG, "Active DivePlan loaded: " + divePlan.getId() + " with title: " + divePlan.getPlanTitle());
+                Log.d(TAG, "DivePlan details: " + divePlan.toString());
+                if (divePlan.getDives() != null && !divePlan.getDives().isEmpty()) {
+                    Log.d(TAG, "Initial Dive in Plan: " + divePlan.getDives().get(0).toString());
+                }
+                // Now the activeDivePlan is available and can be accessed by fragments
+                // through a shared ViewModel (this MainViewModel) or other mechanisms.
+            }
+        });
+
+        mainViewModel.error.observe(this, throwable -> {
+            if (throwable != null) {
+                Log.e(TAG, "Error loading DivePlan: ", throwable);
+                // Optionally, show an error message to the user
+            }
+        });
     }
 
     @Override

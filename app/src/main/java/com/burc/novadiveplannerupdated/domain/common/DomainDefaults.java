@@ -46,6 +46,19 @@ public final class DomainDefaults {
     public static final double MIN_RMV_CUFT_MIN = 0.3;   
     public static final double MAX_RMV_CUFT_MIN = 4.0;   
 
+    // Dive Segment Defaults (for AddEditSegmentDialog and DiveSegment Builder)
+    public static final double DEFAULT_DESCENT_RATE_FT_MIN = 60.0; // ft/min
+    public static final double DEFAULT_ASCENT_RATE_FT_MIN = 30.0;  // ft/min
+    public static final double MIN_SET_POINT = 0.4; // PPO2 for CC
+    public static final double MAX_SET_POINT = 1.6; // PPO2 for CC
+
+    // Default ascent rate for NDL calculations, as suggested by Pelagic doc page 21 (A'R = 30 ft/min)
+    public static final double DEFAULT_ASCENT_RATE_FOR_NDL_FPM = 30.0; // ft/min
+
+    // Decompression Ascent Rates (TODO: Add to DiveSettings)
+    public static final double DEFAULT_DECO_ASCENT_RATE_FPM = 30.0; // ft/min, for ascents between deco stops
+    public static final double DEFAULT_FINAL_ASCENT_RATE_FPM = 10.0;  // ft/min, for ascent from last stop to surface
+
     // Dive Calculation Constants
     public static final double DEPTH_CONSTANT_METRIC = 10.0; // msw per ATA
     public static final double DEPTH_CONSTANT_IMPERIAL = 33.0; // fsw per ATA
