@@ -20,6 +20,8 @@ import com.burc.novadiveplannerupdated.domain.entity.DiveSettings;
 import com.burc.novadiveplannerupdated.domain.model.GasType;
 import com.burc.novadiveplannerupdated.domain.repository.GasRepository;
 import com.burc.novadiveplannerupdated.domain.repository.SettingsRepository;
+import com.burc.novadiveplannerupdated.data.repository.ActiveDivePlanRepositoryImpl;
+import com.burc.novadiveplannerupdated.domain.repository.ActiveDivePlanRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,5 +134,11 @@ public abstract class DataModule {
     @Binds
     @Singleton
     public abstract GasRepository bindGasRepository(GasRepositoryImpl gasRepositoryImpl);
+
+    @Binds
+    @Singleton
+    public abstract ActiveDivePlanRepository bindActiveDivePlanRepository(
+            ActiveDivePlanRepositoryImpl activeDivePlanRepositoryImpl
+    );
 
 } 

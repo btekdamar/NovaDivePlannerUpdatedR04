@@ -214,4 +214,24 @@ public final class UnitConverter {
     public static float convertLitersPerMinuteToPreciseCuFt(float litersPerMinuteValue) {
         return (float) (litersPerMinuteValue * CUFT_PER_LITER);
     }
+
+    /**
+     * Converts a length from feet to meters with double precision.
+     *
+     * @param feet The length in feet.
+     * @return The length in meters.
+     */
+    public static double toMeters(double feet) {
+        return feet * METERS_PER_FOOT;
+    }
+
+    /**
+     * Converts a length from meters to feet with double precision.
+     *
+     * @param meters The length in meters.
+     * @return The length in feet.
+     */
+    public static double toFeet(double meters) {
+        return meters * FEET_PER_METER;
+    }
 } 

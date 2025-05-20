@@ -5,29 +5,21 @@ import com.burc.novadiveplannerupdated.domain.entity.Gas;
 import com.burc.novadiveplannerupdated.domain.model.AlarmSettings;
 import com.burc.novadiveplannerupdated.domain.model.GasProperties;
 import com.burc.novadiveplannerupdated.domain.model.UnitSystem;
+import com.burc.novadiveplannerupdated.domain.service.GasCalculationService;
 
 import javax.inject.Inject;
 
 public class CalculateGasPropertiesUseCase {
 
     private final GenerateGasNameUseCase generateGasNameUseCase;
-    private final CalculateModUseCase calculateModUseCase;
-    private final CalculateHypoxicThresholdUseCase calculateHypoxicThresholdUseCase;
-    private final CalculateEndAlarmDepthUseCase calculateEndAlarmDepthUseCase;
-    private final CalculateWobAlarmDepthUseCase calculateWobAlarmDepthUseCase;
+    private final GasCalculationService gasCalculationService;
 
     @Inject
     public CalculateGasPropertiesUseCase(
             GenerateGasNameUseCase generateGasNameUseCase,
-            CalculateModUseCase calculateModUseCase,
-            CalculateHypoxicThresholdUseCase calculateHypoxicThresholdUseCase,
-            CalculateEndAlarmDepthUseCase calculateEndAlarmDepthUseCase,
-            CalculateWobAlarmDepthUseCase calculateWobAlarmDepthUseCase) {
+            GasCalculationService gasCalculationService) {
         this.generateGasNameUseCase = generateGasNameUseCase;
-        this.calculateModUseCase = calculateModUseCase;
-        this.calculateHypoxicThresholdUseCase = calculateHypoxicThresholdUseCase;
-        this.calculateEndAlarmDepthUseCase = calculateEndAlarmDepthUseCase;
-        this.calculateWobAlarmDepthUseCase = calculateWobAlarmDepthUseCase;
+        this.gasCalculationService = gasCalculationService;
     }
 
     public GasProperties execute(
@@ -57,30 +49,26 @@ public class CalculateGasPropertiesUseCase {
 
         String calculatedGasName = generateGasNameUseCase.execute(gas);
 
-        Integer modRaw = calculateModUseCase.execute(gas, unitSystem);
-        Double mod = (modRaw != null) ? modRaw.doubleValue() : null;
-        // Corrected MOD: if modRaw is 0 but gas is breathable, it should be 0.0, not null.
-        // If fo2 is 0 or po2max is 0, calculateModUseCase returns 0, which should be null for GasProperties unless it's truly 0 depth.
-        // Let's refine this: if modRaw is 0 because it's uncalculable (fo2 or po2max <=0), it's null.
-        // If it calculates to 0 depth (e.g. pure O2 with PPO2Max 1.0), it should be 0.0.
+        Integer modRaw = gasCalculationService.calculateMod(gas, unitSystem);
+        Double mod = null;
         if (gas.getFo2() <= 0 || gas.getPo2Max() == null || gas.getPo2Max() <= 0) {
             mod = null;
-        } else {
+        } else if (modRaw != null) {
             mod = modRaw.doubleValue();
         }
 
-        Integer htRaw = calculateHypoxicThresholdUseCase.execute(gas, unitSystem);
+        Integer htRaw = gasCalculationService.calculateHypoxicThreshold(gas, unitSystem);
         Double ht = (htRaw != null) ? htRaw.doubleValue() : null;
 
         Double endLimit = null;
         if (isEndAlarmEnabled) {
-            Integer endLimitRaw = calculateEndAlarmDepthUseCase.execute(gas, unitSystem, isOxygenNarcotic, endAlarmThreshold);
+            Integer endLimitRaw = gasCalculationService.calculateEndAlarmDepth(gas, unitSystem, isOxygenNarcotic, endAlarmThreshold);
             endLimit = (endLimitRaw != null) ? endLimitRaw.doubleValue() : null;
         }
 
         Double wobLimit = null;
         if (isWobAlarmEnabled) {
-            Integer wobLimitRaw = calculateWobAlarmDepthUseCase.execute(gas, unitSystem, wobAlarmThreshold);
+            Integer wobLimitRaw = gasCalculationService.calculateWobAlarmDepth(gas, unitSystem, wobAlarmThreshold);
             wobLimit = (wobLimitRaw != null) ? wobLimitRaw.doubleValue() : null;
         }
 

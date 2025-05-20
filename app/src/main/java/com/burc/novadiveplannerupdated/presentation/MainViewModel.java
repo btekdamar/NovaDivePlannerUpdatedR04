@@ -5,7 +5,9 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.burc.novadiveplannerupdated.domain.entity.DivePlan;
+import com.burc.novadiveplannerupdated.domain.repository.ActiveDivePlanRepository;
 import com.burc.novadiveplannerupdated.domain.usecase.diveplan.CreateNewDivePlanUseCase;
+import com.burc.novadiveplannerupdated.domain.usecase.diveplan.GetActiveDivePlanUseCase;
 
 import javax.inject.Inject;
 
@@ -18,6 +20,8 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class MainViewModel extends ViewModel {
 
     private final CreateNewDivePlanUseCase createNewDivePlanUseCase;
+    private final GetActiveDivePlanUseCase getActiveDivePlanUseCase;
+    private final ActiveDivePlanRepository activeDivePlanRepository;
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     private final MutableLiveData<DivePlan> _activeDivePlan = new MutableLiveData<>();
@@ -30,9 +34,29 @@ public class MainViewModel extends ViewModel {
     public LiveData<Throwable> error = _error;
 
     @Inject
-    public MainViewModel(CreateNewDivePlanUseCase createNewDivePlanUseCase) {
+    public MainViewModel(
+            CreateNewDivePlanUseCase createNewDivePlanUseCase,
+            GetActiveDivePlanUseCase getActiveDivePlanUseCase,
+            ActiveDivePlanRepository activeDivePlanRepository
+    ) {
         this.createNewDivePlanUseCase = createNewDivePlanUseCase;
+        this.getActiveDivePlanUseCase = getActiveDivePlanUseCase;
+        this.activeDivePlanRepository = activeDivePlanRepository;
+        
+        subscribeToActiveDivePlan();
         loadInitialDivePlan();
+    }
+
+    private void subscribeToActiveDivePlan() {
+        compositeDisposable.add(
+            getActiveDivePlanUseCase.execute()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    _activeDivePlan::setValue,
+                    throwable -> _error.setValue(throwable)
+                )
+        );
     }
 
     private void loadInitialDivePlan() {
@@ -43,13 +67,12 @@ public class MainViewModel extends ViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     divePlan -> {
-                        _activeDivePlan.setValue(divePlan);
+                        activeDivePlanRepository.setActiveDivePlan(divePlan);
                         _isLoading.setValue(false);
                     },
                     throwable -> {
                         _error.setValue(throwable);
                         _isLoading.setValue(false);
-                        // TODO: Handle error appropriately, e.g., show a message to the user
                     }
                 )
         );
@@ -58,6 +81,6 @@ public class MainViewModel extends ViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        compositeDisposable.clear(); // Dispose all subscriptions
+        compositeDisposable.clear();
     }
 } 

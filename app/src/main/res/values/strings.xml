@@ -51,4 +51,50 @@
     <string name="unit_atm">atm</string>
     <string name="unit_m_short"> m</string>
     <string name="unit_ft_short"> ft</string>
+    <!-- Segment -->
+    <string name="segment_saved_successfully">Segment saved successfully</string>
+
+    <!-- Add/Edit Segment Dialog Picker Titles -->
+    <string name="set_time">Set Time</string>
+    <string name="set_depth">Set Depth</string>
+    <string name="set_ascent_rate">Set Ascent Rate</string>
+    <string name="set_descent_rate">Set Descent Rate</string>
+    <string name="set_set_point">Set Set Point</string>
+    <string name="select_gas">Select Gas</string>
+
+    <!-- Units for Pickers/Display -->
+    <string name="unit_min_short">min</string>
+    <string name="unit_m_min_short">m/min</string>
+    <string name="unit_ft_min_short">ft/min</string>
+    <string name="unit_ata_short">ata</string>
+
+    <!-- Messages -->
+    <string name="no_gases_available">No gases available to select.</string>
+
+    <!-- Segment Screen -->
+    <string name="menu">Menu</string>
+    <string name="no_segments_planned_add_one_to_start">No segments planned. Add one to start planning.</string>
+    <string name="add_segment">Add Segment</string>
+    <string name="depth_label">DEPTH</string>
+    <string name="time_label">TIME</string>
+    <string name="gas_label">GAS</string>
+    <string name="sp_label">SP</string>
+    <string name="edit_segment">Edit Segment</string>
+
+    <!-- Add/Edit Segment Dialog Labels -->
+    <string name="segment_dialog_time_label">Time</string>
+    <string name="segment_dialog_depth_label">Depth</string>
+    <string name="segment_dialog_ascent_rate_label">Ascent Rate</string>
+    <string name="segment_dialog_descent_rate_label">Descent Rate</string>
+    <string name="segment_dialog_gas_label">Gas</string>
+    <string name="segment_dialog_sp_label">Set Point (SP)</string>
+    <string name="segment_dialog_advanced_label">Advanced</string>
+
+    <!-- Segment Screen Headers -->
+    <string name="segment_header_segment">SEGMENT</string>
+    <string name="segment_header_depth">DEPTH</string>
+    <string name="segment_header_time">TIME</string>
+    <string name="segment_header_gas">GAS</string>
+    <string name="segment_header_sp">SP</string>
+
 </resources>

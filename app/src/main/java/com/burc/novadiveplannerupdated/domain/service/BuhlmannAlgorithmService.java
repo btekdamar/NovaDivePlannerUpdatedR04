@@ -11,6 +11,7 @@ import com.burc.novadiveplannerupdated.domain.model.DecoStop;
 import com.burc.novadiveplannerupdated.domain.model.GasType;
 import com.burc.novadiveplannerupdated.domain.model.GradientFactors;
 import com.burc.novadiveplannerupdated.domain.model.LastStopDepthOption;
+import com.burc.novadiveplannerupdated.domain.model.SegmentCalculationResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +26,8 @@ import java.util.Objects;
 public class BuhlmannAlgorithmService {
 
     private final List<TissueCompartment> allCompartments;
+    private final OxygenToxicityService oxygenToxicityService;
+    private final GasConsumptionService gasConsumptionService;
 
     /**
      * Helper data class to return multiple values from determineNextStop method.
@@ -76,8 +79,16 @@ public class BuhlmannAlgorithmService {
      * Constructor for BuhlmannAlgorithmService.
      * Initializes the list of 17 tissue compartments based on DiveConstants.
      * This list is created once and reused for all calculations to improve efficiency.
+     * It also takes instances of OxygenToxicityService and GasConsumptionService
+     * for integrated calculations.
+     *
+     * @param oxygenToxicityService Instance of OxygenToxicityService.
+     * @param gasConsumptionService Instance of GasConsumptionService.
      */
-    public BuhlmannAlgorithmService() {
+    public BuhlmannAlgorithmService(OxygenToxicityService oxygenToxicityService, GasConsumptionService gasConsumptionService) {
+        this.oxygenToxicityService = Objects.requireNonNull(oxygenToxicityService, "oxygenToxicityService cannot be null");
+        this.gasConsumptionService = Objects.requireNonNull(gasConsumptionService, "gasConsumptionService cannot be null");
+
         List<TissueCompartment> compartments = new ArrayList<>(DiveConstants.NUMBER_OF_TISSUE_COMPARTMENTS);
         for (int i = 0; i < DiveConstants.NUMBER_OF_TISSUE_COMPARTMENTS; i++) {
             compartments.add(new TissueCompartment(i));
@@ -205,11 +216,13 @@ public class BuhlmannAlgorithmService {
      * @param previousDepthFsw          The depth at the end of the previous segment.
      * @param settings                  The overall dive settings, including altitude and GFs.
      * @return The new {@link TissueState} after this segment.
+     * @return A {@link SegmentCalculationResult} containing the final tissue state,
+     *         CNS and OTU added in this segment, gas consumed in this segment, and calculated transit duration.
      */
-    public TissueState calculateLoadingForDiveSegment(
+    public SegmentCalculationResult calculateLoadingForDiveSegment(
             TissueState previousSegmentEndState,
             DiveSegment segment,
-            Gas gasForTransit,
+            Gas gasForTransit, // This is the gas used FOR transit
             double previousDepthFsw,
             DiveSettings settings) {
 
@@ -224,6 +237,15 @@ public class BuhlmannAlgorithmService {
         double targetDepthFsw = segment.getTargetDepth();
         TissueState tissueStateAfterTransit = previousSegmentEndState;
 
+        // Variables to accumulate toxicity and gas consumption for the segment
+        // These are not returned by this method in this iteration, but calculated.
+        double segmentCumulativeCNS = 0;
+        double segmentCumulativeOTUS = 0;
+        // double segmentCumulativeOTUD = 0; // OTUD is usually tracked per dive or globally, not typically per segment directly for accumulation in this manner
+        double segmentTotalGasConsumedCuft = 0;
+
+        double rmvDiveCuFtMin = settings.getSurfaceConsumptionRates().getRmvDiveCuFtMin(); // Already in cuft/min
+
         // 1. Calculate Transit Phase (if there is a depth change)
         double transitDurationSeconds = 0;
         if (Math.abs(targetDepthFsw - previousDepthFsw) > 1e-6) { // Check for meaningful depth change
@@ -233,11 +255,8 @@ public class BuhlmannAlgorithmService {
             } else { // Ascent
                 rateFpm = segment.getAscentRate();
             }
-            if (rateFpm <= 1e-6) { // Avoid division by zero or extremely small rate
-                // If rate is zero but depth changes, this is problematic. For now, assume it won't happen or treat as instant.
-                // Or, if you want to prevent dive planning with 0 ascent/descent rates for depth changes:
-                // throw new IllegalArgumentException("Ascent/Descent rate cannot be zero for a depth change.");
-                transitDurationSeconds = 0; // Effectively an instant change, or handle as error
+            if (rateFpm <= 1e-6) {
+                transitDurationSeconds = 0;
             } else {
                 transitDurationSeconds = Math.abs(targetDepthFsw - previousDepthFsw) / (rateFpm / 60.0);
             }
@@ -248,9 +267,36 @@ public class BuhlmannAlgorithmService {
                         previousDepthFsw,
                         targetDepthFsw,
                         transitDurationSeconds,
-                        gasForTransit, // Use the specified transit gas
+                        gasForTransit,
                         initialAmbientPressureFsw,
-                        false // Not a surface interval
+                        false
+                );
+
+                // Calculate toxicity and consumption for transit phase
+                double averageTransitDepthFsw = (previousDepthFsw + targetDepthFsw) / 2.0;
+                Double transitSetPointAta = (gasForTransit.getGasType() == GasType.CLOSED_CIRCUIT) ? segment.getSetPoint() : null;
+
+                double transitPpo2Ata = oxygenToxicityService.calculatePpo2(
+                        gasForTransit,
+                        averageTransitDepthFsw,
+                        initialAmbientPressureFsw,
+                        transitSetPointAta
+                );
+
+                double transitCnsRate = oxygenToxicityService.calculateCnsToxicityRate(transitPpo2Ata);
+                double transitRotd = oxygenToxicityService.calculateRotd(transitPpo2Ata);
+                double transitRots = oxygenToxicityService.calculateRots(transitPpo2Ata, transitRotd);
+                double transitDurationMinutes = transitDurationSeconds / 60.0;
+
+                segmentCumulativeCNS += transitCnsRate * transitDurationMinutes;
+                segmentCumulativeOTUS += transitRots * transitDurationMinutes;
+                // segmentCumulativeOTUD += transitRotd * transitDurationMinutes;
+
+                segmentTotalGasConsumedCuft += gasConsumptionService.calculateTotalGasConsumedCuft(
+                        rmvDiveCuFtMin, // Use dive RMV for transit associated with a dive segment
+                        averageTransitDepthFsw,
+                        transitDurationMinutes,
+                        initialAmbientPressureFsw
                 );
             }
         }
@@ -259,27 +305,58 @@ public class BuhlmannAlgorithmService {
         double timeAtTargetDepthSeconds = segment.getUserInputTotalDurationInSeconds() - transitDurationSeconds;
 
         if (timeAtTargetDepthSeconds < 0) {
-            // This might happen if user input duration is less than calculated transit time.
-            // Depending on requirements, either throw an error or adjust.
-            // For now, we'll assume it means no time is spent at target depth after transit.
             timeAtTargetDepthSeconds = 0;
-            // Potentially log a warning or inform UI: "Segment duration too short for transit, only transit calculated."
         }
 
         TissueState finalTissueState = tissueStateAfterTransit;
         if (timeAtTargetDepthSeconds > 0) {
             finalTissueState = calculateTissueStateForDuration(
-                    tissueStateAfterTransit,    // Start from state after transit
-                    targetDepthFsw,             // Start depth is target depth
-                    targetDepthFsw,             // End depth is also target depth (constant)
-                    timeAtTargetDepthSeconds,   // Duration at target depth
-                    segment.getGas(),           // Use the segment's designated gas
+                    tissueStateAfterTransit,
+                    targetDepthFsw,
+                    targetDepthFsw,
+                    timeAtTargetDepthSeconds,
+                    segment.getGas(), // Use the segment's designated gas
                     initialAmbientPressureFsw,
-                    false // Not a surface interval
+                    false
+            );
+
+            // Calculate toxicity and consumption for time at target depth
+            Double targetDepthSetPointAta = (segment.getGas().getGasType() == GasType.CLOSED_CIRCUIT) ? segment.getSetPoint() : null;
+            double targetDepthPpo2Ata = oxygenToxicityService.calculatePpo2(
+                    segment.getGas(),
+                    targetDepthFsw,
+                    initialAmbientPressureFsw,
+                    targetDepthSetPointAta
+            );
+
+            double targetDepthCnsRate = oxygenToxicityService.calculateCnsToxicityRate(targetDepthPpo2Ata);
+            double targetDepthRotd = oxygenToxicityService.calculateRotd(targetDepthPpo2Ata);
+            double targetDepthRots = oxygenToxicityService.calculateRots(targetDepthPpo2Ata, targetDepthRotd);
+            double timeAtTargetDepthMinutes = timeAtTargetDepthSeconds / 60.0;
+
+            segmentCumulativeCNS += targetDepthCnsRate * timeAtTargetDepthMinutes;
+            segmentCumulativeOTUS += targetDepthRots * timeAtTargetDepthMinutes;
+            // segmentCumulativeOTUD += targetDepthRotd * timeAtTargetDepthMinutes;
+
+            segmentTotalGasConsumedCuft += gasConsumptionService.calculateTotalGasConsumedCuft(
+                    rmvDiveCuFtMin, // Use dive RMV for segment time at depth
+                    targetDepthFsw,
+                    timeAtTargetDepthMinutes,
+                    initialAmbientPressureFsw
             );
         }
+        
+        // TODO: Store segmentCumulativeCNS, segmentCumulativeOTUS, segmentTotalGasConsumedCuft
+        // in the DiveSegment object or a calculation result object in a future step.
+        // For now, they are calculated but not explicitly returned or stored beyond this method's scope.
 
-        return finalTissueState;
+        return new SegmentCalculationResult(
+                finalTissueState,
+                segmentCumulativeCNS,
+                segmentCumulativeOTUS,
+                segmentTotalGasConsumedCuft,
+                (transitDurationSeconds > 1e-6 ? transitDurationSeconds : null) // Store null if no transit
+        );
     }
 
     // --- Other main methods (NDL, Deco Plan etc. - to be defined later) ---

@@ -47,8 +47,26 @@ public final class DomainDefaults {
     public static final double MAX_RMV_CUFT_MIN = 4.0;   
 
     // Dive Segment Defaults (for AddEditSegmentDialog and DiveSegment Builder)
-    public static final double DEFAULT_DESCENT_RATE_FT_MIN = 60.0; // ft/min
-    public static final double DEFAULT_ASCENT_RATE_FT_MIN = 30.0;  // ft/min
+    public static final long DEFAULT_SEGMENT_DURATION_SECONDS = 600; // 10 minutes
+    public static final double DEFAULT_SEGMENT_DEPTH_FT = 10.0;    // 10 feet
+    
+    // Imperial Ascent/Descent Rates (ft/min)
+    public static final double DEFAULT_ASCENT_RATE_FT_MIN = 30.0;
+    public static final double MIN_ASCENT_RATE_FT_MIN = 3.0;
+    public static final double MAX_ASCENT_RATE_FT_MIN = 30.0;
+    public static final double DEFAULT_DESCENT_RATE_FT_MIN = 60.0;
+    public static final double MIN_DESCENT_RATE_FT_MIN = 3.0;
+    public static final double MAX_DESCENT_RATE_FT_MIN = 75.0;
+
+    // Metric Ascent/Descent Rates (m/min)
+    public static final double DEFAULT_ASCENT_RATE_M_MIN = 9.0;
+    public static final double MIN_ASCENT_RATE_M_MIN = 3.0;
+    public static final double MAX_ASCENT_RATE_M_MIN = 10.0;
+    public static final double DEFAULT_DESCENT_RATE_M_MIN = 18.0;
+    public static final double MIN_DESCENT_RATE_M_MIN = 3.0;
+    public static final double MAX_DESCENT_RATE_M_MIN = 25.0;
+    
+    public static final double DEFAULT_CC_SET_POINT = 0.5; // Default PPO2 for CC when adding new segment
     public static final double MIN_SET_POINT = 0.4; // PPO2 for CC
     public static final double MAX_SET_POINT = 1.6; // PPO2 for CC
 
@@ -65,8 +83,17 @@ public final class DomainDefaults {
     public static final double MIN_SAFE_PPO2_ATA = 0.21; // Minimum safe PPO2 for hypoxia calculations
     public static final double SURFACE_PRESSURE_ATA = 1.0; // Standard surface pressure in ATA
 
+    // Maximum depth for planning purposes
+    public static final double MAX_DEPTH_FT_PLANNING = 499.0; // Corresponds to ~150m, used in pickers
+
+    // Oxygen Toxicity Defaults
+    public static final double DEFAULT_CNS_LIMIT_PERCENT = 100.0; // Default CNS% limit for OTR calculations
+
     // WOB (Work of Breathing) Calculation Constants from 039_END_WOB_HT_Formulas v1.7.md
     public static final double WOB_EMPIRICAL_CONSTANT_A = 0.167; // Co-efficient for FN2 term
     public static final double WOB_EMPIRICAL_CONSTANT_B = 1.167; // Co-efficient for PPO2 term
     public static final double WOB_EMPIRICAL_DENOMINATOR = 1.202; // Denominator in WOB formula
+
+    // Gas Consumption Defaults
+    public static final double DEFAULT_TANK_SERVICE_PRESSURE_PSI = 3000.0; // Default tank service pressure in PSI
 } 

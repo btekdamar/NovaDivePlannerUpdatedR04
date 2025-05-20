@@ -3,9 +3,7 @@ package com.burc.novadiveplannerupdated.data.room;
 import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
-import androidx.room.TypeConverters;
 
-import com.burc.novadiveplannerupdated.data.room.converter.GasTypeConverter;
 import com.burc.novadiveplannerupdated.data.room.dao.GasDao;
 import com.burc.novadiveplannerupdated.data.room.dao.SettingsDao;
 import com.burc.novadiveplannerupdated.data.room.entity.DiveSettingsEntity;
@@ -13,10 +11,9 @@ import com.burc.novadiveplannerupdated.data.room.entity.GasEntity;
 
 /**
  * The Room database for the application.
- * It contains the DiveSettingsEntity, GasEntity and provides access to their DAOs.
+ * It contains the DiveSettingsEntity and GasEntity, and provides access to their DAOs.
  */
-@Database(entities = {DiveSettingsEntity.class, GasEntity.class}, version = 2, exportSchema = false)
-@TypeConverters({GasTypeConverter.class}) // Ensure GasTypeConverter is registered here if not already app-wide
+@Database(entities = {DiveSettingsEntity.class, GasEntity.class}, version = 1, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     /**
@@ -43,8 +40,6 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     AppDatabase.class, "nova_dive_planner_db")
-                            // .addCallback(sRoomDatabaseCallback) // Example for callback
-                            .fallbackToDestructiveMigration() // For schema changes, a migration strategy is needed
                             .build();
                 }
             }

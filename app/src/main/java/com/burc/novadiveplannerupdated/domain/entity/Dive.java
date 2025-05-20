@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * Represents a single dive within a dive plan.
  * A dive consists of a series of segments and is preceded by a surface interval (except for the first dive).
- * It also holds the initial tissue state at the beginning of this specific dive.
+ * It also holds the initial tissue state at the beginning of this specific dive and calculated results.
  * Instances are immutable and created via the Builder pattern.
  */
 public final class Dive {
@@ -18,6 +18,16 @@ public final class Dive {
     private final TissueState initialTissueStateForThisDive;
     private final List<DiveSegment> segments; // Must not be empty
 
+    // Calculated fields
+    private final List<InstantaneousDiveState> timelineStates;
+    private final Double calculatedMaxDepthMeters;
+    private final Integer calculatedNdlSeconds;
+    private final Integer calculatedTimeToSurfaceSeconds;
+    private final Double calculatedTotalGasConsumedCuft;
+    private final Double calculatedTotalCNSPercent;
+    private final Double calculatedTotalOTU;
+    private final TissueState tissueStateAtEndOfDive;
+
     private Dive(Builder builder) {
         this.diveNumber = builder.diveNumber;
         this.surfaceIntervalBeforeDiveInSeconds = builder.surfaceIntervalBeforeDiveInSeconds;
@@ -25,6 +35,20 @@ public final class Dive {
 
         Objects.requireNonNull(builder.segments, "Segments list cannot be null for a Dive.");
         this.segments = Collections.unmodifiableList(new ArrayList<>(builder.segments)); // Defensive copy
+
+        this.timelineStates = builder.timelineStates != null ?
+                Collections.unmodifiableList(new ArrayList<>(builder.timelineStates)) :
+                Collections.emptyList(); // Defensive copy or empty list
+
+        this.calculatedMaxDepthMeters = builder.calculatedMaxDepthMeters;
+        this.calculatedNdlSeconds = builder.calculatedNdlSeconds;
+        this.calculatedTimeToSurfaceSeconds = builder.calculatedTimeToSurfaceSeconds;
+        this.calculatedTotalGasConsumedCuft = builder.calculatedTotalGasConsumedCuft;
+        this.calculatedTotalCNSPercent = builder.calculatedTotalCNSPercent;
+        this.calculatedTotalOTU = builder.calculatedTotalOTU;
+        this.tissueStateAtEndOfDive = builder.tissueStateAtEndOfDive != null ?
+                new TissueState(builder.tissueStateAtEndOfDive) : // Defensive copy if not null
+                null;
     }
 
     // --- Getters ---
@@ -47,6 +71,39 @@ public final class Dive {
         return segments; // Already unmodifiable
     }
 
+    public List<InstantaneousDiveState> getTimelineStates() {
+        return timelineStates; // Already unmodifiable
+    }
+
+    public Double getCalculatedMaxDepthMeters() {
+        return calculatedMaxDepthMeters;
+    }
+
+    public Integer getCalculatedNdlSeconds() {
+        return calculatedNdlSeconds;
+    }
+
+    public Integer getCalculatedTimeToSurfaceSeconds() {
+        return calculatedTimeToSurfaceSeconds;
+    }
+
+    public Double getCalculatedTotalGasConsumedCuft() {
+        return calculatedTotalGasConsumedCuft;
+    }
+
+    public Double getCalculatedTotalCNSPercent() {
+        return calculatedTotalCNSPercent;
+    }
+
+    public Double getCalculatedTotalOTU() {
+        return calculatedTotalOTU;
+    }
+
+    public TissueState getTissueStateAtEndOfDive() {
+        // Return a new copy to maintain immutability if TissueState is mutable.
+        return tissueStateAtEndOfDive != null ? new TissueState(tissueStateAtEndOfDive) : null;
+    }
+
     // --- equals(), hashCode(), toString() ---
 
     @Override
@@ -57,12 +114,22 @@ public final class Dive {
         return diveNumber == dive.diveNumber &&
                 surfaceIntervalBeforeDiveInSeconds == dive.surfaceIntervalBeforeDiveInSeconds &&
                 initialTissueStateForThisDive.equals(dive.initialTissueStateForThisDive) &&
-                segments.equals(dive.segments);
+                segments.equals(dive.segments) &&
+                Objects.equals(timelineStates, dive.timelineStates) &&
+                Objects.equals(calculatedMaxDepthMeters, dive.calculatedMaxDepthMeters) &&
+                Objects.equals(calculatedNdlSeconds, dive.calculatedNdlSeconds) &&
+                Objects.equals(calculatedTimeToSurfaceSeconds, dive.calculatedTimeToSurfaceSeconds) &&
+                Objects.equals(calculatedTotalGasConsumedCuft, dive.calculatedTotalGasConsumedCuft) &&
+                Objects.equals(calculatedTotalCNSPercent, dive.calculatedTotalCNSPercent) &&
+                Objects.equals(calculatedTotalOTU, dive.calculatedTotalOTU) &&
+                Objects.equals(tissueStateAtEndOfDive, dive.tissueStateAtEndOfDive);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(diveNumber, surfaceIntervalBeforeDiveInSeconds, initialTissueStateForThisDive, segments);
+        return Objects.hash(diveNumber, surfaceIntervalBeforeDiveInSeconds, initialTissueStateForThisDive, segments,
+                timelineStates, calculatedMaxDepthMeters, calculatedNdlSeconds, calculatedTimeToSurfaceSeconds,
+                calculatedTotalGasConsumedCuft, calculatedTotalCNSPercent, calculatedTotalOTU, tissueStateAtEndOfDive);
     }
 
     @Override
@@ -72,6 +139,14 @@ public final class Dive {
                 ", surfaceIntervalInSeconds=" + surfaceIntervalBeforeDiveInSeconds +
                 ", initialTissueState=" + initialTissueStateForThisDive +
                 ", numberOfSegments=" + segments.size() +
+                ", calculatedMaxDepthMeters=" + calculatedMaxDepthMeters +
+                ", calculatedNdlSeconds=" + calculatedNdlSeconds +
+                ", calculatedTimeToSurfaceSeconds=" + calculatedTimeToSurfaceSeconds +
+                ", calculatedTotalGasConsumedCuft=" + calculatedTotalGasConsumedCuft +
+                ", calculatedTotalCNSPercent=" + calculatedTotalCNSPercent +
+                ", calculatedTotalOTU=" + calculatedTotalOTU +
+                ", tissueStateAtEndOfDive=" + tissueStateAtEndOfDive +
+                ", timelineStatesSize=" + (timelineStates != null ? timelineStates.size() : 0) +
                 '}';
     }
 
@@ -82,6 +157,16 @@ public final class Dive {
         private long surfaceIntervalBeforeDiveInSeconds = 0; // Default for first dive
         private TissueState initialTissueStateForThisDive;
         private final List<DiveSegment> segments = new ArrayList<>();
+
+        // Calculated fields
+        private List<InstantaneousDiveState> timelineStates = new ArrayList<>();
+        private Double calculatedMaxDepthMeters;
+        private Integer calculatedNdlSeconds;
+        private Integer calculatedTimeToSurfaceSeconds;
+        private Double calculatedTotalGasConsumedCuft;
+        private Double calculatedTotalCNSPercent;
+        private Double calculatedTotalOTU;
+        private TissueState tissueStateAtEndOfDive;
 
         /**
          * Builder constructor.
@@ -117,6 +202,50 @@ public final class Dive {
             Objects.requireNonNull(segments, "Segments list cannot be null.");
             this.segments.clear();
             this.segments.addAll(segments);
+            return this;
+        }
+
+        public Builder timelineStates(List<InstantaneousDiveState> timelineStates) {
+            if (timelineStates != null) {
+                this.timelineStates = new ArrayList<>(timelineStates); // Defensive copy
+            } else {
+                this.timelineStates.clear();
+            }
+            return this;
+        }
+
+        public Builder calculatedMaxDepthMeters(Double calculatedMaxDepthMeters) {
+            this.calculatedMaxDepthMeters = calculatedMaxDepthMeters;
+            return this;
+        }
+
+        public Builder calculatedNdlSeconds(Integer calculatedNdlSeconds) {
+            this.calculatedNdlSeconds = calculatedNdlSeconds;
+            return this;
+        }
+
+        public Builder calculatedTimeToSurfaceSeconds(Integer calculatedTimeToSurfaceSeconds) {
+            this.calculatedTimeToSurfaceSeconds = calculatedTimeToSurfaceSeconds;
+            return this;
+        }
+
+        public Builder calculatedTotalGasConsumedCuft(Double calculatedTotalGasConsumedCuft) {
+            this.calculatedTotalGasConsumedCuft = calculatedTotalGasConsumedCuft;
+            return this;
+        }
+
+        public Builder calculatedTotalCNSPercent(Double calculatedTotalCNSPercent) {
+            this.calculatedTotalCNSPercent = calculatedTotalCNSPercent;
+            return this;
+        }
+
+        public Builder calculatedTotalOTU(Double calculatedTotalOTU) {
+            this.calculatedTotalOTU = calculatedTotalOTU;
+            return this;
+        }
+
+        public Builder tissueStateAtEndOfDive(TissueState tissueStateAtEndOfDive) {
+            this.tissueStateAtEndOfDive = tissueStateAtEndOfDive; // Builder can hold direct ref, constructor will copy
             return this;
         }
 

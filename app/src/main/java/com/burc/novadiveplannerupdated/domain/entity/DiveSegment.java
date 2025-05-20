@@ -1,7 +1,7 @@
 package com.burc.novadiveplannerupdated.domain.entity;
 
-import com.burc.novadiveplannerupdated.domain.model.GasType;
 import com.burc.novadiveplannerupdated.domain.common.DomainDefaults;
+import com.burc.novadiveplannerupdated.domain.model.GasType;
 
 import java.util.Objects;
 
@@ -21,6 +21,13 @@ public final class DiveSegment {
     private final double ascentRate;  // in ft/min
     private final double setPoint;    // PPO2 setpoint for CC, 0.0 for OC
 
+    // Calculated fields (to be populated by UseCases after Buhlmann etc. calculations)
+    private final TissueState tissueStateAtEndOfSegment; // Nullable if not yet calculated or for a user-input-only segment
+    private final Double calculatedTransitDurationSeconds; // Nullable
+    private final Double gasConsumedInSegmentCuft; // Amount of gas consumed IN THIS SEGMENT, in cubic feet. Nullable.
+    private final Double cnsAddedInSegmentPercent; // CNS percentage ADDED IN THIS SEGMENT. Nullable.
+    private final Double otusAddedInSegment;       // OTUs ADDED IN THIS SEGMENT. Nullable.
+
     // --- Constructor ---
     private DiveSegment(Builder builder) {
         this.segmentNumber = builder.segmentNumber;
@@ -31,6 +38,12 @@ public final class DiveSegment {
         this.descentRate = builder.descentRate;
         this.ascentRate = builder.ascentRate;
         this.setPoint = builder.setPoint;
+
+        this.tissueStateAtEndOfSegment = builder.tissueStateAtEndOfSegment;
+        this.calculatedTransitDurationSeconds = builder.calculatedTransitDurationSeconds;
+        this.gasConsumedInSegmentCuft = builder.gasConsumedInSegmentCuft;
+        this.cnsAddedInSegmentPercent = builder.cnsAddedInSegmentPercent;
+        this.otusAddedInSegment = builder.otusAddedInSegment;
     }
 
     // --- Getters ---
@@ -62,6 +75,29 @@ public final class DiveSegment {
         return setPoint;
     }
 
+    // Getters for new calculated fields
+    public TissueState getTissueStateAtEndOfSegment() {
+        // Return a new copy if TissueState is mutable and immutability is desired here.
+        // Assuming TissueState is immutable or its immutability is handled by the caller/setter context.
+        return tissueStateAtEndOfSegment;
+    }
+
+    public Double getCalculatedTransitDurationSeconds() {
+        return calculatedTransitDurationSeconds;
+    }
+
+    public Double getGasConsumedInSegmentCuft() {
+        return gasConsumedInSegmentCuft;
+    }
+
+    public Double getCnsAddedInSegmentPercent() {
+        return cnsAddedInSegmentPercent;
+    }
+
+    public Double getOtusAddedInSegment() {
+        return otusAddedInSegment;
+    }
+
     // --- equals() and hashCode() ---
     @Override
     public boolean equals(Object o) {
@@ -74,12 +110,18 @@ public final class DiveSegment {
                 Double.compare(that.descentRate, descentRate) == 0 &&
                 Double.compare(that.ascentRate, ascentRate) == 0 &&
                 Double.compare(that.setPoint, setPoint) == 0 &&
-                Objects.equals(gas, that.gas);
+                Objects.equals(gas, that.gas) &&
+                Objects.equals(tissueStateAtEndOfSegment, that.tissueStateAtEndOfSegment) &&
+                Objects.equals(calculatedTransitDurationSeconds, that.calculatedTransitDurationSeconds) &&
+                Objects.equals(gasConsumedInSegmentCuft, that.gasConsumedInSegmentCuft) &&
+                Objects.equals(cnsAddedInSegmentPercent, that.cnsAddedInSegmentPercent) &&
+                Objects.equals(otusAddedInSegment, that.otusAddedInSegment);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(segmentNumber, targetDepth, userInputTotalDurationInSeconds, gas, descentRate, ascentRate, setPoint);
+        return Objects.hash(segmentNumber, targetDepth, userInputTotalDurationInSeconds, gas, descentRate, ascentRate, setPoint,
+                tissueStateAtEndOfSegment, calculatedTransitDurationSeconds, gasConsumedInSegmentCuft, cnsAddedInSegmentPercent, otusAddedInSegment);
     }
 
     @Override
@@ -92,6 +134,12 @@ public final class DiveSegment {
                 ", descentRate=" + descentRate + " ft/min" +
                 ", ascentRate=" + ascentRate + " ft/min" +
                 ", setPoint=" + setPoint +
+                // Add new fields to toString if useful for debugging
+                (tissueStateAtEndOfSegment != null ? ", tissueStateAtEndHash=" + tissueStateAtEndOfSegment.hashCode() : "") +
+                (calculatedTransitDurationSeconds != null ? ", transitSecs=" + calculatedTransitDurationSeconds : "") +
+                (gasConsumedInSegmentCuft != null ? ", gasConsumedCuft=" + gasConsumedInSegmentCuft : "") +
+                (cnsAddedInSegmentPercent != null ? ", cnsAdded%=" + cnsAddedInSegmentPercent : "") +
+                (otusAddedInSegment != null ? ", otusAdded=" + otusAddedInSegment : "") +
                 '}';
     }
 
@@ -104,6 +152,13 @@ public final class DiveSegment {
         private Double descentRate; // ft/min, if null, default will be used
         private Double ascentRate;  // ft/min, if null, default will be used
         private Double setPoint;    // PPO2 for CC
+
+        // Fields for calculated data
+        private TissueState tissueStateAtEndOfSegment = null;
+        private Double calculatedTransitDurationSeconds = null;
+        private Double gasConsumedInSegmentCuft = null;
+        private Double cnsAddedInSegmentPercent = null;
+        private Double otusAddedInSegment = null;
 
         public Builder() {
             // No-arg constructor
@@ -144,6 +199,32 @@ public final class DiveSegment {
             return this;
         }
 
+        // Setters for calculated fields
+        public Builder tissueStateAtEndOfSegment(TissueState tissueState) {
+            this.tissueStateAtEndOfSegment = tissueState;
+            return this;
+        }
+
+        public Builder calculatedTransitDurationSeconds(Double seconds) {
+            this.calculatedTransitDurationSeconds = seconds;
+            return this;
+        }
+
+        public Builder gasConsumedInSegmentCuft(Double cuft) {
+            this.gasConsumedInSegmentCuft = cuft;
+            return this;
+        }
+
+        public Builder cnsAddedInSegmentPercent(Double cnsPercent) {
+            this.cnsAddedInSegmentPercent = cnsPercent;
+            return this;
+        }
+
+        public Builder otusAddedInSegment(Double otu) {
+            this.otusAddedInSegment = otu;
+            return this;
+        }
+
         public DiveSegment build() {
             Objects.requireNonNull(gas, "Gas cannot be null for a DiveSegment.");
 
@@ -163,11 +244,16 @@ public final class DiveSegment {
             }
 
             // Basic validations
-            if (targetDepth < 0) throw new IllegalArgumentException("Target depth cannot be negative. Was: " + targetDepth);
-            if (userInputTotalDurationInSeconds < 0) throw new IllegalArgumentException("Duration cannot be negative. Was: " + userInputTotalDurationInSeconds);
-            if (this.descentRate <= 0) throw new IllegalArgumentException("Descent rate must be positive. Was: " + this.descentRate);
-            if (this.ascentRate <= 0) throw new IllegalArgumentException("Ascent rate must be positive. Was: " + this.ascentRate);
-            if (segmentNumber <= 0) throw new IllegalArgumentException("Segment number must be positive. Was: " + segmentNumber);
+            if (targetDepth < 0)
+                throw new IllegalArgumentException("Target depth cannot be negative. Was: " + targetDepth);
+            if (userInputTotalDurationInSeconds < 0)
+                throw new IllegalArgumentException("Duration cannot be negative. Was: " + userInputTotalDurationInSeconds);
+            if (this.descentRate <= 0)
+                throw new IllegalArgumentException("Descent rate must be positive. Was: " + this.descentRate);
+            if (this.ascentRate <= 0)
+                throw new IllegalArgumentException("Ascent rate must be positive. Was: " + this.ascentRate);
+            if (segmentNumber <= 0)
+                throw new IllegalArgumentException("Segment number must be positive. Was: " + segmentNumber);
 
 
             return new DiveSegment(this);
